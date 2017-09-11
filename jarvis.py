@@ -13,28 +13,8 @@ import socket
 # Global variables
 app_id = 'GTH7KE-J86XHKY6UU' # App_ID for WolframAlpha connection
 
-def wiki(r, search):
-    summary = wikipedia.summary(search)
-    speak(summary)
-    speak('Should I open the website?')
-    audio = r.listen(source)
-    input = r.recognize_google(audio)
-    input = input.lower()
-    if input == 'yes':
-        page = wikipedia.WikipediaPage(search).title
-        page = page.replace(' ','_')
-        website = 'http://wikipedia.org/wiki/' + page
-        args = ['open',website]
-        subprocess.Popen(args)
-
-    jarvis(r)
-
-def define(r, search):
-    speak('define: ' + search)
-
-    jarvis(r)
-
 def eval(r, search):
+    print(search)
     client = wolframalpha.Client(app_id)
     res = client.query(search)
     for pod in (temp for temp in res.pods if temp.id == 'Result'):
@@ -42,7 +22,7 @@ def eval(r, search):
             output = search + ' = ' + sub.plaintext
             speak(output)
     
-    jarvis(r)
+    ask_another(r)
 
 def integ(r, search):
     client = wolframalpha.Client(app_id)
@@ -58,7 +38,7 @@ def integ(r, search):
             for sub in pod.subpods:
                 print(sub.plaintext)
 
-    jarvis(r)
+    ask_another(r)
 
 def deriv(r, search):
     client = wolframalpha.Client(app_id)
@@ -68,11 +48,39 @@ def deriv(r, search):
             output = search + ' = ' + sub.plaintext
             speak(sub.plaintext)
     
-    jarvis(r)
+    ask_another(r)
+
+def define(r, query):
+    if re.contains('define', query):
+        term = re.match('define (.+)',input).group(1)
+    else
+        term = re.match('what does (.+) mean',input).group(1)
+
+    definition = '#error'
+
+    speak(term + ' means ' + definition)
+
+    ask_another(r)
+
+def wiki(r, query, search):
+    summary = wikipedia.summary(search)
+    speak(summary)
+    speak('Should I open the website?')
+    audio = r.listen(source)
+    input = r.recognize_google(audio)
+    input = input.lower()
+    if input == 'yes':
+        page = wikipedia.WikipediaPage(search).title
+        page = page.replace(' ','_')
+        website = 'http://wikipedia.org/wiki/' + page
+        args = ['open',website]
+        subprocess.Popen(args)
+
+    ask_another(r)
 
 def repeat(r, search):
     speak(search)
-    jarvis(r)
+    ask_another(r)
 
 def internet_on():
     try:
@@ -80,6 +88,18 @@ def internet_on():
         return True
     except OSError:
         return False
+
+def ask_another(r):
+    speak('Will there be anything else, sir?')
+
+    with sr.Microphone() as source:
+        audio = r.listen(source)
+    input = r.recognize_google(audio)
+
+    if input == 'yes':
+        jarvis(r)
+    else:
+        speak('Goodbye, sir.')
 
 def jarvis(r):
     with sr.Microphone() as source:
@@ -90,34 +110,35 @@ def jarvis(r):
     else:
         speak('Unable to connect.')
         return
+        
     print(input)
     input = input.lower()
 
     if input != 'exit' and input != 'stop':
-        re_eval = 'evaluate (.+)|find (.+)'
-        re_integ = 'integrate (.+)|what is the integral of (.+)'
-        re_deriv = 'derivative of (.+)'
+        re_eval = '(evaluate|find) (.+)'
+        re_integ = '(integrate|what is the integral of) (.+)'
+        re_deriv = '(derivative of) (.+)'
         re_def = 'define (.+)|what does (.+) mean'
-        re_wiki = 'what is (.+)|who is (.+)|where is (.+)'
-        re_repeat = 'repeat after me (.+)'
+        re_wiki = '(what is|who is|where is) (.+)'
+        re_repeat = '(repeat after me) (.+)'
 
-        if re.match(re_eval,input,re.I):
-            eval(r, re.match(re_eval,input,re.I).group())
-        elif re.match(re_integ,input,re.I):
-            integ(r, re.match(re_integ,input,re.I).group())
-        elif re.match(re_deriv,input,re.I):
-            deriv(r, re.match(re_deriv,input,re.I).group())
-        elif re.search(re_def,input,re.I):
-            define(r, re.search(re_def,input,re.I).group())
-        elif re.match(re_wiki,input,re.I):
-            wiki(r, re.match(re_wiki,input,re.I).group())
-        elif re.match(re_repeat,input,re.I):
-            repeat(r, re.match(re_repeat,input,re.I).group(1))
+        if re.match(re_eval,input):
+            eval(r, re.match(re_eval,input).group(2))
+        elif re.match(re_integ,input):
+            integ(r, re.match(re_integ,input).group(2))
+        elif re.match(re_deriv,input):
+            deriv(r, re.match(re_deriv,input).group(2))
+        elif re.match(re_def,input):
+            define(r, input)
+        elif re.match(re_wiki,input):
+            wiki(r, input, re.match(re_wiki,input).group(2))
+        elif re.match(re_repeat,input):
+            repeat(r, re.match(re_repeat,input).group(2))
         else: # No matches
             speak('No input matches. Please enter valid input.')
             jarvis(r)
     else:
-        speak('Jarvis shutting down.')
+        speak('Goodbye, sir.')
 
 def speak(speech):
     print(speech)
