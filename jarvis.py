@@ -1,20 +1,15 @@
 import speech_recognition as sr
+import wolframalpha
 import wikipedia
-import sys
-import codecs
 import subprocess
 import string
 import re
-import wolframalpha
-import ssl
-import certifi
 import socket
 
 # Global variables
 app_id = 'GTH7KE-J86XHKY6UU' # App_ID for WolframAlpha connection
 
 def eval(r, search):
-    print(search)
     client = wolframalpha.Client(app_id)
     res = client.query(search)
     for pod in (temp for temp in res.pods if temp.id == 'Result'):
@@ -53,7 +48,7 @@ def deriv(r, search):
 def define(r, query):
     if re.contains('define', query):
         term = re.match('define (.+)',input).group(1)
-    else
+    else:
         term = re.match('what does (.+) mean',input).group(1)
 
     definition = '#error'
@@ -91,15 +86,24 @@ def internet_on():
 
 def ask_another(r):
     speak('Will there be anything else, sir?')
-
     with sr.Microphone() as source:
         audio = r.listen(source)
     input = r.recognize_google(audio)
+    print(input)
+
+    while input != 'yes' and input != 'no':
+        speak('Please say yes or no.')
+        with sr.Microphone() as source:
+            audio = r.listen(source)
+        input = r.recognize_google(audio)
+        print(input)
 
     if input == 'yes':
+        speak('Alright')
         jarvis(r)
-    else:
+    else: # input == 'no'
         speak('Goodbye, sir.')
+        return
 
 def jarvis(r):
     with sr.Microphone() as source:
@@ -110,7 +114,7 @@ def jarvis(r):
     else:
         speak('Unable to connect.')
         return
-        
+
     print(input)
     input = input.lower()
 
