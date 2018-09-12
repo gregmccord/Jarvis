@@ -74,6 +74,7 @@ def define(query):
 
         i += 1
         if i == len(definition):
+            time.sleep(0.75) # Natural pause
             speak('There are no more parts of speech.')
             done = True
         else:
@@ -89,6 +90,7 @@ def iterate(arrays, query, i):
     output = re.sub(':([^:]+$)',r'; For Example: \1' , arrays[i])
     speak(output)
     if i == len(arrays) - 1:
+            time.sleep(0.75) # Natural pause
             speak('There are no more definitions for this part of speech.')
             return
     else:
@@ -122,6 +124,10 @@ def wiki(query, search):
 def repeat(search):
     speak(search)
     ask_another()
+
+# Because Mom is the best
+def mom():
+    speak("Your mom is the most beautiful woman in the world")
 
 # Determine if the device is connected to the internet or not
 def internet_on():
@@ -187,6 +193,7 @@ def jarvis():
         re_def = 'define (.+)|what does (.+) mean'
         re_wiki = '(what is|who is|where is) (.+)'
         re_repeat = '(repeat after me) (.+)'
+        re_mom = 'jarvis who is the most beautiful woman in the world'
 
         # Determine which method to call
         if re.match(re_eval,text):
@@ -201,6 +208,8 @@ def jarvis():
             wiki(text, re.match(re_wiki,text).group(2))
         elif re.match(re_repeat,text):
             repeat(re.match(re_repeat,text).group(2))
+        elif re.match(re_mom,text):
+            mom()
         else: # No matches
             speak('No input matches. Please enter valid input.')
             jarvis()
